@@ -64,7 +64,6 @@ let globeIndexSpecialTiles;
 let globeTilesViewCount = 0;
 let globeSimLoad = 12;
 let globeTableLimit = 80;
-let showGrid = false;
 let lastGlobeExtent;
 let pendingFetches = 0;
 let firstFetch = true;
@@ -4193,18 +4192,22 @@ function globeIndexes() {
     let x3 = (x1 < x2) ? x2 : 300;
     let count = 0;
 
-    for (let lon = x1; lon < x3 + grid; lon += grid) {
+    for (let lon = x1; lon < x3 + grid; lon += grid / 2) {
         if (x1 >= x2 && lon > 180) {
             lon -= 360;
             x3 = x2;
         }
         if (lon > x3)
             lon = x3 + 0.01;
-        for (let lat = y1; lat < y2 + grid; lat += grid) {
+        if (count++ > 8000) {
+            console.log("globeIndexes outer fail, lon: " + lon);
+            break;
+        }
+        for (let lat = y1; lat < y2 + grid; lat += grid / 2) {
             if (lat > y2)
                 lat = y2 + 0.01;
-            if (count++ > 2000) {
-                console.log("globeIndexes fail, lon: " + lon + ", lat: " + lat);
+            if (count++ > 8000) {
+                console.log("globeIndexes inner fail, lon: " + lon + ", lat: " + lat);
                 break;
             }
             if (lat > 90)
@@ -4214,7 +4217,11 @@ function globeIndexes() {
             if (!indexes.includes(index)) {
                 indexes.push(index);
             }
+            if (lat > y2)
+                break;
         }
+        if (lon > x3)
+            break;
     }
     globeTilesViewCount = indexes.length;
     return indexes;
